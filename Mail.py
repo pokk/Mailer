@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 
 class Mail:
 	"""
-	Mail format.
+	Mail format. All of the mail information in this class.
 	"""
 
 	def __init__(self, uid, to, subject, content, attach):
@@ -16,7 +16,8 @@ class Mail:
 		self.__content = content
 		self.__attachment = attach
 
-	def CreateMail(self):
+	# Create a mail.
+	def create_mail(self):
 		# Mail header
 		self.__msg['From'] = self.__id
 		self.__msg['To'] = self.__mailTo
@@ -26,14 +27,18 @@ class Mail:
 		self.__msg.attach(MIMEText(self.__content))
 
 		# Mail attachment
-		self.CreateAttachment()
+		self._create_attachment()
 
 		return self.__msg
 
-	def CreateAttachment(self):
+	# Create attachments.
+	# Users don't have too call this method. Create a mail has already included this.
+	def _create_attachment(self):
 		for path in self.__attachment:
+			# Get the file name from file path.
 			self.__filename = path.split('/')[-1]
 
+			# Attach the file to mail information.
 			self.att = MIMEText(open(path, 'rb').read(), 'base64', 'gb2312')
 			self.att['Content-Type'] = 'application/octet-stream'
 			self.att['Content-Disposition'] = 'attachment; filename="%s"' % self.__filename
@@ -77,6 +82,7 @@ class MailBuilder:
 		return Mail(self.__id, self.__mailTo, self.__mailSub, self.__content, self.__attach)
 
 
+# Testing code
 def main():
 	print()
 

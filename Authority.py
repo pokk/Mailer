@@ -1,8 +1,11 @@
 """ Created by Jieyi on 2/5/16. """
 import smtplib
 
-uid = 'sample@msn.com'
-pwd = 'sample'
+from IoOperation import FileOperator
+
+_debug_log = False
+# For decorator's parameter.
+user = FileOperator().open_json_file('user.json')
 
 
 class Authority:
@@ -10,22 +13,22 @@ class Authority:
 	Authority decorator.
 	"""
 
-	def __init__(self, id, pwd):
-		self.__id = id
+	def __init__(self, uid, pwd):
+		self.__id = uid
 		self.__pwd = pwd
 
 	def __call__(self, f):
 		def wrapper(*args, **kwargs):
 			res = None
-			self.__s = self.login()
+			self.__s = self._login()
 			if self.__s is not None:
 				res = f(self, self.__s, args[-1])
-			self.logout()
+			self._logout()
 			return res
 
 		return wrapper
 
-	def login(self):
+	def _login(self):
 		try:
 			self.__service = smtplib.SMTP('smtp.live.com', 587)
 			self.__service.ehlo()
@@ -38,17 +41,18 @@ class Authority:
 
 		return self.__service
 
-	def logout(self):
+	def _logout(self):
 		self.__service.quit()
 
 
 class Mailer:
-	@Authority(uid, pwd)
-	def sendMail(self, service, mail):
-		self.__content = mail.CreateMail()
-		service.sendmail(self.__content['From'], self.__content['To'], self.__content.as_string())
+	@Authority(user['uid'], user['pwd'])
+	def send_mail(self, service, mail):
+		mail_info = mail.create_mail()
+		service.sendmail(mail_info['From'], mail_info['To'], mail_info.as_string())
 
 
+# Testing code
 def main():
 	print()
 
