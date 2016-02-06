@@ -5,42 +5,52 @@ from pprint import pprint
 _debug_log = False
 
 
-class FileManager:
-	"""
-	File decorator.
-	"""
-
-	def __init__(self, f):
-		self.__file = None
-		self.__f = f
-
-	def __call__(self, filename=''):
-		self._open_file(filename)
-		res = self.__f(self, self.__file)
-		self._close_file()
-		return res
-
-	def _open_file(self, filename):
-		self.__file = open(filename)
-
-	def _close_file(self):
-		self.__file.close()
-
-
 class FileOperator:
+	"""
+	All of the operations for file will be here.
+	"""
+
 	@FileManager
-	def open_json_file(self, file_name):
-		data = json.load(file_name)
+	def open_json_file(self, opened_file):
+		if _debug_log:
+			print(opened_file)
+
+		data = json.load(opened_file)
+
 		if _debug_log:
 			pprint(data)
 
 		return data
 
 
+# Decorator.
+class FileManager:
+	"""
+	File decorator. Including open and close file's fixed actions.
+	"""
+
+	def __init__(self, fun):
+		self.__opened_file = None
+		self.__fun = fun
+
+	def __call__(self, file_name):
+		self._open_file(file_name)
+		# Here is executing the decoratee's action.
+		res = self.__fun(self.__fun, self.__opened_file)
+		self._close_file()
+		return res
+
+	def _open_file(self, file_name):
+		self.__opened_file = open(file_name)
+
+	def _close_file(self):
+		self.__opened_file.close()
+
+
 # Testing code.
 def main():
-	FileOperator().open_json_file('user.json')
-	print("hello world")
+	d = FileOperator().open_json_file('user.json')
+	print('%s\n%s' % (d['uid'], d['pwd']))
 
 
 if __name__ == '__main__':
