@@ -1,20 +1,29 @@
 """ Created by Jieyi on 2/4/16. """
 import os
 
-from Authority import user, Mailer
+from Authority import Mailer, user
 from Internet import InternetStatus
+from IoOperation import FileOperator
 from Mail import MailBuilder
 
-from pymailer.IoOperation import FileOperator
+"""
+* If you use pyCharm to execute this project, the file path shouldn't
+  add os.path.abspath(os.pardir). Because of the shell script, we need
+  to add correct file path.
+"""
 
 _debug_log = False
 # Get receiver's information from local json file.
-receiver = FileOperator().open_json_file('receiver.json')
-content = FileOperator().open_txt_file('content.txt')
+# ** The path we should use 'receiver.json' & 'content.txt'. **
+receiver = FileOperator().open_json_file(os.path.abspath(os.pardir) + '/receiver.json')
+content = FileOperator().open_txt_file(os.path.abspath(os.pardir) + '/content.txt')
 
 
 # Main function for all library.
 def main():
+	# Change the name for difference people.
+	modified_content = content.replace('**name**', receiver['receiver_name'])
+
 	print('Checking the internet...')
 	# Check the internet is available or not.
 	if not InternetStatus().is_internet_connect():
@@ -25,6 +34,9 @@ def main():
 
 	# Get the folder path which is the same as where this file is.
 	same_dir = os.path.dirname(os.path.abspath(__file__))
+	# Go to parent's folder path.
+	same_dir = same_dir[0:same_dir.rfind('/')]
+	# Change path to mail folder.
 	same_dir = '/'.join((same_dir, 'For mail'))
 
 	# Get attachment's file from the same folder.
@@ -38,7 +50,7 @@ def main():
 
 	print('Creating the mail format...')
 	# Build a mail data.
-	mail = MailBuilder().uid(user['uid']).to(receiver['To']).subject(receiver['Subject']).content(content) \
+	mail = MailBuilder().uid(user['uid']).to(receiver['to']).subject(receiver['subject']).content(modified_content) \
 		.attach(attachment1) \
 		.attach(attachment2) \
 		.attach(attachment3) \

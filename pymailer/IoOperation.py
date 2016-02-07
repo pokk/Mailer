@@ -12,10 +12,9 @@ class FileCategoryFactory:
 	@staticmethod
 	def create_open_method(file_name):
 		filename_extension = file_name.split('.')[-1]
-
 		return {
 			'txt': open(file_name, 'r', encoding='utf-8'),
-			'json': open(file_name)
+			'json': open(file_name),
 		}[filename_extension]
 
 

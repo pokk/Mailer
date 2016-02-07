@@ -1,3 +1,3 @@
 cd "`dirname "$0"`"
 cd pymailer
-python AutoMailer.py
+python3 AutoMailer.py

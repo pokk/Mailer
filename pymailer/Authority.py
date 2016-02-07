@@ -1,13 +1,13 @@
 """ Created by Jieyi on 2/5/16. """
+import os
 import smtplib
 
+from IoOperation import FileOperator
 from Mail import MailBuilder
-
-from pymailer.IoOperation import FileOperator
 
 _debug_log = False
 # For decorator's parameter.
-user = FileOperator().open_json_file('user.json')
+user = FileOperator().open_json_file(os.path.abspath(os.pardir) + '/user.json')
 
 
 # Decorator.
