@@ -1,8 +1,9 @@
 """ Created by Jieyi on 2/5/16. """
 import smtplib
 
-from IoOperation import FileOperator
 from Mail import MailBuilder
+
+from pymailer.IoOperation import FileOperator
 
 _debug_log = False
 # For decorator's parameter.

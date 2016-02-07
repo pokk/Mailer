@@ -3,8 +3,9 @@ import os
 
 from Authority import user, Mailer
 from Internet import InternetStatus
-from IoOperation import FileOperator
 from Mail import MailBuilder
+
+from pymailer.IoOperation import FileOperator
 
 _debug_log = False
 # Get receiver's information from local json file.
