@@ -1,0 +1,6 @@
+{
+	"uid" : "sample@sample.com",
+	"pwd" : "sample",
+	/* This is hotmail server address. */
+	"server" : "smtp.live.com"
+}
