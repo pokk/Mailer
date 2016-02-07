@@ -7,24 +7,6 @@ from Mail import MailBuilder
 _debug_log = False
 # For decorator's parameter.
 user = FileOperator().open_json_file('user.json')
-mail_server_address = 'smtp.live.com'
-
-
-class Mailer:
-	"""
-	We collate all of mail operations here.
-	As like 'send', delete, ...
-	"""
-
-	# Send a mail to someone through which mail service.
-	@Authority(user['uid'], user['pwd'], mail_server_address)
-	def send_mail(self, mail, mail_server):
-		mail_info = mail.create_mail()
-
-		if _debug_log:
-			print(mail_info)
-
-		mail_server.sendmail(mail_info['From'], mail_info['To'], mail_info.as_string())
 
 
 # Decorator.
@@ -44,12 +26,18 @@ class Authority:
 			res = None
 
 			# If login is successful, get the service object.
+			print('Try to login to your mail server...')
 			self.__s = self._login()
+			print('Login is successful!!\n')
+
 			if self.__s is not None:
 				# Here parameters will send to the decoratee.
-				res = f(*args, self.__s, **kwargs)
+				res = f(args[0], args[1], self.__s)
+
 			# After operation action, auto logout.
+			print('Logout your mail server...')
 			self._logout()
+			print('Logout!!\n')
 			return res
 
 		return wrapper
@@ -71,6 +59,27 @@ class Authority:
 	# Logout from server.
 	def _logout(self):
 		self.__service.quit()
+
+
+class Mailer:
+	"""
+	We collate all of mail operations here.
+	As like 'send', delete, ...
+	"""
+
+	# Send a mail to someone through which mail service.
+	@Authority(user['uid'], user['pwd'], user['server'])
+	def send_mail(self, mail, mail_server):
+		print('Combining all of the information to a mail...')
+		mail_info = mail.create_mail()
+		print('Finish combining!!\n')
+
+		if _debug_log:
+			print(mail_info)
+
+		print('Start to send the mail...')
+		mail_server.sendmail(mail_info['From'], mail_info['To'], mail_info.as_string())
+		print('Finished sending!!\n')
 
 
 # Testing code

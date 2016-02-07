@@ -4,7 +4,7 @@ import socket
 
 class InternetStatus:
 	def __init__(self):
-		...
+		pass
 
 	@staticmethod
 	def is_internet_connect():

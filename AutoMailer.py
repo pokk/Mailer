@@ -1,7 +1,7 @@
 """ Created by Jieyi on 2/4/16. """
 import os
 
-from Authority import Mailer, user
+from Authority import user, Mailer
 from Internet import InternetStatus
 from IoOperation import FileOperator
 from Mail import MailBuilder
@@ -9,15 +9,18 @@ from Mail import MailBuilder
 _debug_log = False
 # Get receiver's information from local json file.
 receiver = FileOperator().open_json_file('receiver.json')
+content = FileOperator().open_txt_file('content.txt')
 
 
 # Main function for all library.
 def main():
+	print('Checking the internet...')
 	# Check the internet is available or not.
 	if not InternetStatus().is_internet_connect():
 		# If the internet is not connected, we will quit the process.
 		print('no internet connect!!')
 		return
+	print('Internet is ok!\n')
 
 	# Get the folder path which is the same as where this file is.
 	same_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,8 +35,9 @@ def main():
 	attachment6 = os.path.join(same_dir, 'Rule for email.pdf')
 	attachment7 = os.path.join(same_dir, 'Self Check.pdf')
 
+	print('Creating the mail format...')
 	# Build a mail data.
-	mail = MailBuilder().uid(user['uid']).to(receiver['To']).subject(receiver['Subject']).content(receiver['Content']) \
+	mail = MailBuilder().uid(user['uid']).to(receiver['To']).subject(receiver['Subject']).content(content) \
 		.attach(attachment1) \
 		.attach(attachment2) \
 		.attach(attachment3) \
@@ -42,11 +46,13 @@ def main():
 		.attach(attachment6) \
 		.attach(attachment7) \
 		.build()
+	print('Finish the creating a mail!!\n')
 
 	if _debug_log:
 		print(mail.CreateMail())
 
 	Mailer().send_mail(mail)
+	print('Welcome to use my application :)')
 
 
 if __name__ == '__main__':
