@@ -3,10 +3,10 @@ import os
 import smtplib
 from tkinter.constants import END
 
-from IoOperation import FileOperator
-from Mail import MailBuilder
+from pymailer import debug_log
+from pymailer.io_operation import FileOperator
+from pymailer.mail import Mail
 
-_debug_log = False
 # For decorator's parameter.
 user = FileOperator().open_json_file(os.path.abspath(os.pardir) + '/user.json')
 
@@ -17,8 +17,7 @@ class Authority:
     Authority decorator. Including login and logout's fixed actions.
     """
 
-    def __init__(self, context, uid, pwd, mail_service_ip):
-        self.__context = context
+    def __init__(self, uid, pwd, mail_service_ip):
         self.__id = uid
         self.__pwd = pwd
         self.__mail_service_ip = mail_service_ip
@@ -28,21 +27,21 @@ class Authority:
             # '*args' parameters are gotten by caller.
             res = None
 
-            print('gggggggg', self.__context)
             # If login is successful, get the service object.
-            self.__context.log_msg_text.insert(END, 'Try to login to your mail server...\n')
+            print('Try to login to your mail server...')
             self.__s = self._login()
-            self.__context.log_msg_text.insert(END, 'Login is successful!!\n\n')
+            if not self.__s:
+                print('** Login was failed!!! :(\n')
+                return res
 
-            if self.__s is not None:
-                # Here parameters will send to the decoratee. 'args[0]' is decoratee itself.
-                res = f(args[0], args[1], self.__s)
+            print('Login was successful!!\n')
+            # Here parameters will send to the decoratee. 'args[0]' is decoratee itself.
+            res = f(args[0], args[1], self.__s)
 
             # After operation action, auto logout.
-            self.__context.log_msg_text.insert(END, 'Logout your mail server...\n')
-
+            print('Logout your mail server...')
             self._logout()
-            self.__context.log_msg_text.insert(END, 'Logout!!\n\n')
+            print('Logout!!\n')
             return res
 
         return wrapper
@@ -64,6 +63,7 @@ class Authority:
     # Logout from server.
     def _logout(self):
         self.__service.quit()
+        pass
 
 
 class Mailer:
@@ -75,24 +75,32 @@ class Mailer:
     window_context = None
 
     # Send a mail to someone through which mail service.
-    @Authority(window_context, user['uid'], user['pwd'], user['server'])
+    @Authority(user['uid'], user['pwd'], user['server'])
     def send_mail(self, mail, mail_server):
         Mailer.window_context.log_msg_text.insert(END, 'Combining all of the information to a mail...\n')
-        print('Combining all of the information to a mail...')
-        mail_info = mail.create_mail()
+        try:
+            mail_info = mail.create_mail()
+        except FileNotFoundError as fnfe:
+            Mailer.window_context.log_msg_text.insert(END, 'You lack some file.\n\n')
+            Mailer.window_context.log_msg_text.insert(END, '** ' + str(fnfe) + '\n')
+            return False
         Mailer.window_context.log_msg_text.insert(END, 'Finish combining!!\n\n')
 
-        if _debug_log:
+        if debug_log:
             print(mail_info)
 
         Mailer.window_context.log_msg_text.insert(END, 'Start to send the mail...\n')
-        mail_server.sendmail(mail_info['From'], mail_info['To'], mail_info.as_string())
+        try:
+            mail_server.sendmail(mail_info['From'], mail_info['To'], mail_info.as_string())
+        except smtplib.SMTPRecipientsRefused as stmp_refused:
+            Mailer.window_context.log_msg_text.insert(END, '\n** ' + str(stmp_refused) + '\n\n')
+            return False
         Mailer.window_context.log_msg_text.insert(END, 'Finished sending!!\n\n')
 
 
 # Testing code
 def main():
-    mail = MailBuilder().uid(user['uid']).to('sample@google.com').subject('Hello world').content('Oh, just testing!!').build()
+    mail = Mail.MailBuilder().uid(user['uid']).to('sample@google.com').subject('Hello world').content('Oh, just testing!!').build()
     # 'mail' parameter will send to Authority decorator's __call__.
     Mailer().send_mail(mail)
 

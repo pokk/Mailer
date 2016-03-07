@@ -14,7 +14,7 @@ class InternetStatus:
             host = socket.gethostbyname('www.google.com')
             # connect to the host -- tells us if the host is actually
             # reachable
-            s = socket.create_connection((host, 80), 2)
+            soc = socket.create_connection((host, 80), 2)
             return True
         except Exception as e:
             print('ERROR : %s' % e)

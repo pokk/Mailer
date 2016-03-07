@@ -2,7 +2,7 @@
 import json
 from pprint import pprint
 
-_debug_log = False
+from pymailer import debug_log
 
 
 class FileCategoryFactory:
@@ -52,19 +52,19 @@ class FileOperator:
 
     @FileManager
     def open_json_file(self, opened_file):
-        if _debug_log:
+        if debug_log:
             print(opened_file)
 
         data = json.load(opened_file)
 
-        if _debug_log:
+        if debug_log:
             pprint(data)
 
         return data
 
     @FileManager
     def open_txt_file(self, opened_file):
-        if _debug_log:
+        if debug_log:
             print(opened_file)
 
         content = ''.join(str(line) for line in opened_file.readlines())
