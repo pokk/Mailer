@@ -26,8 +26,9 @@ class Authority:
                 return res
 
             print('Login was successful!!\n')
-            # Here parameters will send to the decoratee. 'args[0]' is decoratee itself.
-            res = f(args[0], args[1], self.__s)
+            # Here parameters will send to the decoratee.
+            # 'args[0]' must be decoratee itself(class object).
+            res = f(*args, self.__s)
 
             # After operation action, auto logout.
             print('Logout your mail server...')

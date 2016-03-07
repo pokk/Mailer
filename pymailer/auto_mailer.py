@@ -1,24 +1,15 @@
 """ Created by Jieyi on 2/4/16. """
-import os
 import threading
 import tkinter.messagebox as messagebox
 from tkinter import Frame, Label, Entry, Button, END
 from tkinter.scrolledtext import ScrolledText
 
-from pymailer.internet import InternetStatus
-from pymailer.io_operation import FileOperator
-from pymailer.mail import Mail
-from pymailer.mailer import user, Mailer
-
-# Get receiver's information from local json file.
-# ** The path we should use 'receiver.json' & 'content.txt'. **
-content = FileOperator().open_txt_file(os.path.abspath(os.pardir) + '/content.txt')
+from internet import InternetStatus
+from mailer import Mailer
 
 
 class Application(Frame):
     def __init__(self, master=None):
-        self._file_arr = ['Detail Map.png', 'Map.png', 'Kansai Int Access.pdf', 'GARBAGE.pdf',
-                          'Home Utensils.pdf', 'Rule for email.pdf', 'Self Check.pdf']
         # Avoiding to send it continuously.
         self.lock = False
 
@@ -60,14 +51,11 @@ class Application(Frame):
             self.log_msg_text.delete('1.0', END)
             # Error checking.
             if not self.__check_internet():
-                self.log_msg_text.insert(END, 'Please check your internet state.\n\n')
+                self.log_msg_text.insert(END, '\n** Please check your internet state.\n\n')
+                self.lock = False  # Unlock this process.
                 return
 
-            self.log_msg_text.insert(END, 'Creating the mail format...\n')
-            mail = self.__making_email()
-            self.log_msg_text.insert(END, 'Finish the creating a mail!!\n\n')
-
-            ending = 'Welcome to use my application :)' if Mailer().send_mail(mail) else '** Your sending was failed :( please send it again!'
+            ending = 'Welcome to use my application :)' if Mailer().send_mail() else '** Your sending was failed :( please send it again!'
             self.log_msg_text.insert(END, ending)
             self.lock = False  # Unlock this process.
 
@@ -91,35 +79,6 @@ class Application(Frame):
             return False
         self.log_msg_text.insert(END, 'Internet is ok!\n\n')
         return True
-
-    def __making_email(self):
-        """
-        Making an email format.
-
-        :return: Email format.
-        """
-
-        modified_content = content.replace('**name**', self.receiver_name_field.get())
-
-        # Get the folder path which is the same as where this file is.
-        same_dir = os.path.dirname(os.path.abspath(__file__))
-        # Go to parent's folder path.
-        same_dir = same_dir[0:same_dir.rfind('/')]
-        # Change path to mail folder.
-        same_dir = '/'.join((same_dir, 'For mail'))
-
-        # Build a mail data.
-        mail = Mail.MailBuilder() \
-            .uid(user['uid']) \
-            .to(self.receiver_email_field.get()) \
-            .subject(self.subject_field.get()) \
-            .content(modified_content)
-
-        for file in self._file_arr:
-            attachment = os.path.join(same_dir, file)
-            mail.attach(attachment)
-
-        return mail.build()
 
 
 # Main function for all library.

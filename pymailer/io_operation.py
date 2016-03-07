@@ -2,7 +2,7 @@
 import json
 from pprint import pprint
 
-from pymailer import debug_log
+from __init__ import debug_log
 
 
 class FileCategoryFactory:
