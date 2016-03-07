@@ -91,13 +91,13 @@ class Mail:
                 self.__filename = path.split('/')[-1]
 
                 # Attach the file to mail information.
-                self.att = MIMEText(open(path, 'rb').read(), 'base64', 'gb2312')
-                self.att['Content-Type'] = 'application/octet-stream'
-                self.att['Content-Disposition'] = 'attachment; filename="%s"' % self.__filename
+                att = MIMEText(open(path, 'rb').read(), 'base64', 'gb2312')
+                att['Content-Type'] = 'application/octet-stream'
+                att['Content-Disposition'] = 'attachment; filename="%s"' % self.__filename
 
-                self.__msg.attach(self.att)
+                self.__msg.attach(att)
             except FileNotFoundError as fnfe:
-                res = True
+                res = False
                 lack_file_name += str(fnfe) + '\n'
         return res, lack_file_name
 

@@ -71,7 +71,7 @@ class Mailer:
         # Modify the content's receiver name.
         modified_content = content.replace('**name**', Mailer.window_context.receiver_name_field.get())
         # Find the attachment dir path.
-        self._file_path = self._file_dir_path()
+        self._file_path = '..' + self._file_dir_path()
 
         # Build a mail data.
         mail = Mail.MailBuilder() \
