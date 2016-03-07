@@ -53,6 +53,12 @@ class Mail:
 
     # Create a mail.
     def create_mail(self):
+        """
+        Create a mail content, including sender, receiver, subject, and attachment......
+
+        :return: All of the mail content.
+        """
+
         # Mail header
         self.__msg['From'] = self.__id
         self.__msg['To'] = self.__mailTo
@@ -71,6 +77,12 @@ class Mail:
     # Create attachments.
     # Users don't have too call this method. Create a mail has already included this.
     def _create_attachment(self):
+        """
+        Attach the necessary file to customer.
+
+        :return: result, True: Success, False: Failed. lack_file_name, Which file you didn't attach.
+        """
+
         res = True
         lack_file_name = ''
         for path in self.__attachment:

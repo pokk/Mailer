@@ -5,10 +5,10 @@ import tkinter.messagebox as messagebox
 from tkinter import Frame, Label, Entry, Button, END
 from tkinter.scrolledtext import ScrolledText
 
-from pymailer.authority import Mailer, user
 from pymailer.internet import InternetStatus
 from pymailer.io_operation import FileOperator
 from pymailer.mail import Mail
+from pymailer.mailer import user, Mailer
 
 # Get receiver's information from local json file.
 # ** The path we should use 'receiver.json' & 'content.txt'. **
@@ -19,10 +19,12 @@ class Application(Frame):
     def __init__(self, master=None):
         self._file_arr = ['Detail Map.png', 'Map.png', 'Kansai Int Access.pdf', 'GARBAGE.pdf',
                           'Home Utensils.pdf', 'Rule for email.pdf', 'Self Check.pdf']
+        # Avoiding to send it continuously.
         self.lock = False
+
         Frame.__init__(self, master)
         self.grid()
-
+        # UI components.
         self.receiver_email_text = Label(self, text="Receiver:")
         self.receiver_email_field = Entry(self, width=50)
         self.subject_text = Label(self, text='Subject:')
@@ -31,12 +33,16 @@ class Application(Frame):
         self.receiver_name_field = Entry(self, width=50)
         self.send_button = Button(self, text='Send', command=self.__send_mail)
         self.log_msg_text = ScrolledText(self)
-
         self.__create_widgets()
 
+        # Let Mailer can control components.
         Mailer.window_context = self
 
     def __create_widgets(self):
+        """
+        Construct all of the UI components.
+        """
+
         self.receiver_email_text.grid(row=0, column=0)
         self.receiver_email_field.grid(row=0, column=1, columnspan=6)
         self.subject_text.grid(row=1, column=0)
@@ -49,8 +55,10 @@ class Application(Frame):
 
     def __send_mail(self):
         def inner_send_mail():
-            self.lock = True
+            self.lock = True  # Lock this process.
+            # Clear the log text area.
             self.log_msg_text.delete('1.0', END)
+            # Error checking.
             if not self.__check_internet():
                 self.log_msg_text.insert(END, 'Please check your internet state.\n\n')
                 return
@@ -61,7 +69,7 @@ class Application(Frame):
 
             ending = 'Welcome to use my application :)' if Mailer().send_mail(mail) else '** Your sending was failed :( please send it again!'
             self.log_msg_text.insert(END, ending)
-            self.lock = False
+            self.lock = False  # Unlock this process.
 
         if not self.lock:
             threading.Thread(target=inner_send_mail).start()
@@ -69,6 +77,12 @@ class Application(Frame):
             messagebox.showinfo('Warning', "Now it's processing...")
 
     def __check_internet(self):
+        """
+        Checking the internet state.
+
+        :return: True: internet is available, False: internet is unavailable.
+        """
+
         self.log_msg_text.insert(END, 'Checking the internet...\n')
         # Check the internet is available or not.
         if not InternetStatus().is_internet_connect():
@@ -79,6 +93,12 @@ class Application(Frame):
         return True
 
     def __making_email(self):
+        """
+        Making an email format.
+
+        :return: Email format.
+        """
+
         modified_content = content.replace('**name**', self.receiver_name_field.get())
 
         # Get the folder path which is the same as where this file is.
