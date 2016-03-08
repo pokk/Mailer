@@ -4,7 +4,7 @@ import tkinter
 import tkinter.messagebox as messagebox
 from tkinter import Frame, Label, Entry, Button, END
 from tkinter.scrolledtext import ScrolledText
-from tkinter.ttk import Progressbar
+from tkinter.ttk import Progressbar, Combobox
 
 from internet import InternetStatus
 from mailer import Mailer
@@ -25,6 +25,8 @@ class Application(Frame):
         self.subject_field = Entry(self, width=50)
         self.receiver_name_text = Label(self, text='Name:')
         self.receiver_name_field = Entry(self, width=50)
+        self.url_lang_combobox = Combobox(self, values=['English', 'Tradition Chinese', 'Simple Chinese', 'Japanese'],
+                                          state='readonly')
         self.send_progressbar = Progressbar(self, orient='horizontal', length=500, mode='determinate', maximum=300)
         self.send_button = Button(self, text='Send', command=self.__send_mail)
         self.quit_button = Button(self, text='Exit', command=self.__exit)
@@ -46,10 +48,14 @@ class Application(Frame):
         self.subject_field.insert(0, 'Osaka Mariko Apartment Location & Condition')
         self.receiver_name_text.grid(row=2, column=0)
         self.receiver_name_field.grid(row=2, column=1, columnspan=6)
-        self.send_progressbar.grid(row=3, column=0, columnspan=7)
-        self.send_button.grid(row=4, column=2)
-        self.quit_button.grid(row=4, column=3)
-        self.log_msg_text.grid(row=5, column=0, columnspan=7)
+        self.url_lang_combobox.grid(row=3, column=2, columnspan=2)
+        self.send_progressbar.grid(row=4, column=0, columnspan=7)
+        self.send_button.grid(row=5, column=2)
+        self.quit_button.grid(row=5, column=3)
+        self.log_msg_text.grid(row=6, column=0, columnspan=7)
+
+        # Default setting.
+        self.url_lang_combobox.current(0)
 
     def __send_mail(self):
         def inner_send_mail():
@@ -96,6 +102,9 @@ class Application(Frame):
             self.master.quit()
         else:
             messagebox.showinfo('Error', "Now it's processing...please wait it ;)")
+
+    def _choose(self):
+        print('111111')
 
 
 # Main function for all library.
