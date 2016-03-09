@@ -7,6 +7,7 @@ from tkinter.constants import FALSE
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Progressbar, Combobox
 
+from __init__ import attachment_list, lang_list, content_link_title, content_link
 from internet import InternetStatus
 from mailer import Mailer
 
@@ -18,6 +19,10 @@ class DecoratorThreadLockerApp:
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
+            """
+            For locking the thread processing.
+            """
+
             decoratee = args[0]
 
             decoratee.lock = True  # Lock this process.
@@ -79,7 +84,7 @@ class AppGUI(Frame):
         self.master = master
         # Setting for ComboBox.
         self.url_lang_combobox_str = StringVar()
-        self.url_lang_combobox_list = ['Select a language', 'English', 'Tradition Chinese', 'Simple Chinese', 'Korea']
+        self.url_lang_combobox_list = lang_list
         # UI components.
         self.receiver_email_text = Label(self, text="Receiver:")
         self.receiver_email_field = Entry(self, width=50)
@@ -94,36 +99,9 @@ class AppGUI(Frame):
         self.quit_button = Button(self, text='Exit', command=self.__exit)
         self.log_msg_text = ScrolledText(self)
         # Attachment.
-        self._mail_attachment_list = ['Detail Map.png', 'Map.png', 'Kansai Int Access.pdf', 'GARBAGE.pdf',
-                                      'Home Utensils.pdf', 'Rule for email.pdf', 'Self Check.pdf']
-        self.url_lang_link_title = ['< Japan Guide >', '< Weather Forecast in Osaka >',
-                                    '< Shuttle bus station at KIX to / from the Rinku Premium Outlet Shopping Mall >',
-                                    '< Shuttle Bus Timetable Between KIX and the Rinku Premium Outlet Mall >',
-                                    '< USJ >', '< KAIYUKAN AQUARIUM 海遊館 >']
-        self.url_lang_link = {self.url_lang_combobox_list[1]: ['http://www.japan-guide.com/e/e2361.html',
-                                                               'http://meteocast.net/forecast/jp/osaka/',
-                                                               'http://www.kansai-airport.or.jp/en/index.asp',
-                                                               'http://www.kate.co.jp/en/',
-                                                               'http://www.usj.co.jp/e/',
-                                                               'http://www.kaiyukan.com/language/eng/'],
-                              self.url_lang_combobox_list[2]: ['http://tw.japan-guide.com/',
-                                                               'http://cn.meteocast.net/forecast/jp/osaka/',
-                                                               'http://www.kansai-airport.or.jp/tw/index.asp',
-                                                               'http://www.kate.co.jp/tcn/',
-                                                               'http://www.usj.co.jp/tw/',
-                                                               'http://www.kaiyukan.com/language/chinese_traditional/'],
-                              self.url_lang_combobox_list[3]: ['http://cn.japan-guide.com/',
-                                                               'http://cn.meteocast.net/forecast/jp/osaka/',
-                                                               'http://www.kansai-airport.or.jp/cn/index.asp',
-                                                               'http://www.kate.co.jp/scn/',
-                                                               'http://www.usj.co.jp/cn/',
-                                                               'http://www.kaiyukan.com/language/chinese_simplified/'],
-                              self.url_lang_combobox_list[4]: ['http://kr.japan-guide.com/',
-                                                               'http://ko.meteocast.net/forecast/jp/osaka/',
-                                                               'http://www.kansai-airport.or.jp/kr/index.asp',
-                                                               'http://www.kate.co.jp/kr/',
-                                                               'http://www.usj.co.jp/kr/',
-                                                               'http://www.kaiyukan.com/language/korean/']}
+        self._mail_attachment_list = attachment_list
+        self.url_lang_link_title = content_link_title
+        self.url_lang_link = content_link
         self._mailer = Mailer(self._mail_attachment_list)
 
         # Let Mailer can control components.
