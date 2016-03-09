@@ -11,7 +11,65 @@ from internet import InternetStatus
 from mailer import Mailer
 
 
-class Application(Frame):
+class DecoratorThreadLockerApp:
+    """
+    Decorator to application for lock the thread.
+    """
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            decoratee = args[0]
+
+            decoratee.lock = True  # Lock this process.
+            decoratee.send_progressbar['value'] = 0
+            decoratee.log_msg_text.delete('1.0', END)  # Clear the log text area.
+
+            res = func(*args)
+
+            decoratee.lock = False  # Unlock this process.
+            return res
+
+        return wrapper
+
+
+class DecoratorErrorCheckApp:
+    """
+    Decorator to application for error checking.
+    """
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            """
+            Error checking.
+            """
+
+            decoratee = args[0]
+            res = True
+
+            # Check combobox.
+            if res and decoratee.url_lang_combobox.current() is 0:
+                decoratee.log_msg_text.insert(END, '\n** Please select a language, thanks! ;)\n\n')
+                res &= False
+            # Check receiver name.
+            if res and not decoratee.is_input_receiver():
+                decoratee.log_msg_text.insert(END, "\n** Please don't forget to input receiver name. ^_^\n\n")
+                res &= False
+            # Check internet.
+            if res and not decoratee.is_internet():
+                decoratee.log_msg_text.insert(END, '\n** Please check your internet state.\n\n')
+                res &= False
+            # Check content key word.
+            if res and not decoratee.modify_content_link(decoratee.url_lang_link.get(decoratee.url_lang_combobox_str.get())):
+                decoratee.log_msg_text.insert(END, '\n** Please check your content key word.\n\n')
+                res &= False
+
+            decoratee.lock = res  # Unlock the thread locker.
+            return func(*args) if res else res
+
+        return wrapper
+
+
+class AppGUI(Frame):
     def __init__(self, master=None):
         # Avoiding to send it continuously.
         self.lock = False
@@ -32,20 +90,16 @@ class Application(Frame):
         self.url_lang_text = Label(self, text='Link lang:')
         self.url_lang_combobox = Combobox(self, textvariable=self.url_lang_combobox_str, values=self.url_lang_combobox_list, state='readonly')
         self.send_progressbar = Progressbar(self, orient='horizontal', length=500, mode='determinate', maximum=300)
-        self.send_button = Button(self, text='Send', command=self.__send_mail)
+        self.send_button = Button(self, text='Send', command=self._send_mail)
         self.quit_button = Button(self, text='Exit', command=self.__exit)
         self.log_msg_text = ScrolledText(self)
-        self.__create_widgets()
-
         # Attachment.
         self._mail_attachment_list = ['Detail Map.png', 'Map.png', 'Kansai Int Access.pdf', 'GARBAGE.pdf',
                                       'Home Utensils.pdf', 'Rule for email.pdf', 'Self Check.pdf']
-        # 1. < Japan Guide >
-        # 2. < Weather Forecast in Osaka >
-        # 3. < Shuttle bus station at KIX to / from the Rinku Premium Outlet Shopping Mall >
-        # 4. < Shuttle Bus Timetable Between KIX and the Rinku Premium Outlet Mall >
-        # 5. < USJ >
-        # 6. < KAIYUKAN AQUARIUM >
+        self.url_lang_link_title = ['< Japan Guide >', '< Weather Forecast in Osaka >',
+                                    '< Shuttle bus station at KIX to / from the Rinku Premium Outlet Shopping Mall >',
+                                    '< Shuttle Bus Timetable Between KIX and the Rinku Premium Outlet Mall >',
+                                    '< USJ >', '< KAIYUKAN AQUARIUM 海遊館 >']
         self.url_lang_link = {self.url_lang_combobox_list[1]: ['http://www.japan-guide.com/e/e2361.html',
                                                                'http://meteocast.net/forecast/jp/osaka/',
                                                                'http://www.kansai-airport.or.jp/en/index.asp',
@@ -70,8 +124,54 @@ class Application(Frame):
                                                                'http://www.kate.co.jp/kr/',
                                                                'http://www.usj.co.jp/kr/',
                                                                'http://www.kaiyukan.com/language/korean/']}
+        self._mailer = Mailer(self._mail_attachment_list)
+
         # Let Mailer can control components.
-        Mailer.window_context = self
+        Mailer.window_content = self
+
+        self.__create_widgets()
+
+    def is_internet(self):
+        """
+        Checking the internet state.
+
+        :return: True: internet is available, False: internet is unavailable.
+        """
+
+        self.log_msg_text.insert(END, 'Checking the internet...\n')
+        # Check the internet is available or not.
+        if not InternetStatus().is_internet_connect():
+            # If the internet is not connected, we will quit the process.
+            self.log_msg_text.insert(END, 'No internet connect!!\n')
+            return False
+        self.log_msg_text.insert(END, 'Internet is ok!\n\n')
+        return True
+
+    def is_input_receiver(self):
+        return not not self.receiver_name_field.get()
+
+    def modify_content_link(self, link_arr):
+        content = self._mailer.content
+        for index in range(len(link_arr)):
+            try:
+                content_index = content.index(self.url_lang_link_title[index]) + len(self.url_lang_link_title[index])
+                content = content[:content_index] + '\n' + link_arr[index] + content[content_index:]
+            except ValueError as ve:
+                self.log_msg_text.insert(END, self.url_lang_link_title[index] + ' ' + str(ve) + '\n')
+                return False
+
+        self._mailer.content = content
+        return True
+
+    def _send_mail(self):
+        if not self.lock:
+            threading.Thread(target=self.__send_mail).start()
+        else:
+            messagebox.showinfo('Warning', "Now it's processing...")
+
+    def _choose(self, event):
+        # arr = self.url_lang_link.get(self.url_lang_combobox_str.get())  # Get the array by choosing language.
+        pass
 
     def __create_widgets(self):
         """
@@ -96,49 +196,6 @@ class Application(Frame):
         self.url_lang_combobox.current(0)
         self.url_lang_combobox.bind("<<ComboboxSelected>>", self._choose)
 
-    def __send_mail(self):
-        def inner_send_mail():
-            self.lock = True  # Lock this process.
-            self.send_progressbar['value'] = 0
-            self.log_msg_text.delete('1.0', END)  # Clear the log text area.
-            # Error checking.
-            if self.url_lang_combobox.current() is 0:
-                messagebox.showinfo('Warning', 'Please select a language, thanks! ;)')
-                self.lock = False
-                return
-            if not self.__check_internet():
-                self.log_msg_text.insert(END, '\n** Please check your internet state.\n\n')
-                self.lock = False  # Unlock this process.
-                return
-
-            self.send_progressbar.start()  # Start processing the progress.
-            ending = 'Welcome to use my application :)' if Mailer(self._mail_attachment_list).send_mail() \
-                else '** Your sending was failed :( please send it again!'
-            self.log_msg_text.insert(END, ending)
-            self.send_progressbar.stop()  # Stop processing the progress.
-            self.lock = False  # Unlock this process.
-
-        if not self.lock:
-            threading.Thread(target=inner_send_mail).start()
-        else:
-            messagebox.showinfo('Warning', "Now it's processing...")
-
-    def __check_internet(self):
-        """
-        Checking the internet state.
-
-        :return: True: internet is available, False: internet is unavailable.
-        """
-
-        self.log_msg_text.insert(END, 'Checking the internet...\n')
-        # Check the internet is available or not.
-        if not InternetStatus().is_internet_connect():
-            # If the internet is not connected, we will quit the process.
-            self.log_msg_text.insert(END, 'No internet connect!!\n')
-            return False
-        self.log_msg_text.insert(END, 'Internet is ok!\n\n')
-        return True
-
     def __exit(self):
         if not self.lock:
             self.log_msg_text.insert(END, '\n\n -- Bye Bye --\n')
@@ -146,8 +203,14 @@ class Application(Frame):
         else:
             messagebox.showinfo('Error', "Now it's processing...please wait it ;)")
 
-    def _choose(self, event):
-        arr = self.url_lang_link.get(self.url_lang_combobox_str.get())  # Get the array by choosing language.
+    @DecoratorThreadLockerApp()
+    @DecoratorErrorCheckApp()
+    def __send_mail(self):
+        self.send_progressbar.start()  # Start processing the progress.
+        ending = 'Welcome to use my application :)' if self._mailer.send_mail() \
+            else '** Your sending was failed :( please send it again!'
+        self.log_msg_text.insert(END, ending)
+        self.send_progressbar.stop()  # Stop processing the progress.
 
 
 # Main function for all library.
@@ -160,7 +223,7 @@ def main():
 
     tk = tkinter.Tk()
     tk.resizable(width=FALSE, height=FALSE)
-    app = Application(tk)
+    app = AppGUI(tk)
     app.master.title('Auto Mailer')
     app.mainloop()
 

@@ -15,10 +15,10 @@ class InternetStatus:
             # connect to the host -- tells us if the host is actually
             # reachable
             soc = socket.create_connection((host, 80), 2)
-            return True
         except Exception as e:
-            print('ERROR : %s' % e)
+            print('ERROR: %s' % e)
             return False
+        return True
 
 
 def main():

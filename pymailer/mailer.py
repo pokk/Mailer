@@ -10,9 +10,6 @@ from mail import Mail
 
 # For decorator's parameter.
 user = FileOperator().open_json_file(os.path.abspath(os.pardir) + '/user.json')
-# Get receiver's information from local json file.
-# ** The path we should use 'receiver.json' & 'content.txt'. **
-content = FileOperator().open_txt_file(os.path.abspath(os.pardir) + '/content.txt')
 
 
 class Mailer:
@@ -21,41 +18,44 @@ class Mailer:
     As like 'send', delete, ...
     """
 
-    window_context = None
+    window_content = None
 
     def __init__(self, attachment_list=None):
         self._file_arr = attachment_list
         self._mail = None
         self._file_path = ''
+        # Get receiver's information from local json file.
+        # ** The path we should use 'content.txt'. **
+        self._content = FileOperator().open_txt_file(os.path.abspath(os.pardir) + '/content.txt')
 
     # Send a mail to someone through which mail service.
     @Authority(user['uid'], user['pwd'], user['server'])
     def send_mail(self, mail_server):
         self._mail = self._making_mail()
 
-        Mailer.window_context.log_msg_text.insert(END, 'Combining all of the information to a mail...\n')
+        Mailer.window_content.log_msg_text.insert(END, 'Combining all of the information to a mail...\n')
 
         try:
             mail_info = self._mail.create_mail()
         except FileNotFoundError as fnfe:
-            Mailer.window_context.log_msg_text.insert(END, 'You lack some file.\n\n')
-            Mailer.window_context.log_msg_text.insert(END, '** ' + str(fnfe) + '\n')
+            Mailer.window_content.log_msg_text.insert(END, 'You lack some file.\n\n')
+            Mailer.window_content.log_msg_text.insert(END, '** ' + str(fnfe) + '\n')
             return False
 
-        Mailer.window_context.log_msg_text.insert(END, 'Finish combining!!\n\n')
+        Mailer.window_content.log_msg_text.insert(END, 'Finish combining!!\n\n')
 
         if debug_log:
             print(mail_info)
 
-        Mailer.window_context.log_msg_text.insert(END, 'Start to send the mail...\n')
+        Mailer.window_content.log_msg_text.insert(END, 'Start to send the mail...\n')
 
         try:
             mail_server.sendmail(mail_info['From'], mail_info['To'], mail_info.as_string())
         except smtplib.SMTPRecipientsRefused as stmp_refused:
-            Mailer.window_context.log_msg_text.insert(END, '\n** ' + str(stmp_refused) + '\n\n')
+            Mailer.window_content.log_msg_text.insert(END, '\n** ' + str(stmp_refused) + '\n\n')
             return False
 
-        Mailer.window_context.log_msg_text.insert(END, 'Finished sending!!\n\n')
+        Mailer.window_content.log_msg_text.insert(END, 'Finished sending!!\n\n')
         return True
 
     def _making_mail(self):
@@ -65,25 +65,25 @@ class Mailer:
         :return: A mail format.
         """
 
-        Mailer.window_context.log_msg_text.insert(END, 'Creating the mail format...\n')
+        Mailer.window_content.log_msg_text.insert(END, 'Creating the mail format...\n')
 
         # Modify the content's receiver name.
-        modified_content = content.replace('**name**', Mailer.window_context.receiver_name_field.get())
+        self._content = self._content.replace('**name**', Mailer.window_content.receiver_name_field.get())
         # Find the attachment dir path.
         self._file_path = '..' + self._file_dir_path()
 
         # Build a mail data.
         mail = Mail.MailBuilder() \
             .uid(user['uid']) \
-            .to(Mailer.window_context.receiver_email_field.get()) \
-            .subject(Mailer.window_context.subject_field.get()) \
-            .content(modified_content)
+            .to(Mailer.window_content.receiver_email_field.get()) \
+            .subject(Mailer.window_content.subject_field.get()) \
+            .content(self._content)
 
         for file in self._file_arr:
             attachment = os.path.join(self._file_path, file)
             mail.attach(attachment)
 
-        Mailer.window_context.log_msg_text.insert(END, 'Finish the creating a mail!!\n\n')
+        Mailer.window_content.log_msg_text.insert(END, 'Finish the creating a mail!!\n\n')
 
         return mail.build()
 
@@ -96,6 +96,14 @@ class Mailer:
         dir_path = '/'.join((dir_path, 'For mail'))
 
         return dir_path
+
+    @property
+    def content(self):
+        return self._content
+
+    @content.setter
+    def content(self, value):
+        self._content = value
 
 
 def main():
