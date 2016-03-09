@@ -20,15 +20,15 @@ class Authority:
 
             # If login is successful, get the service object.
             print('Try to login to your mail server...')
-            self.__s = self._login()
-            if not self.__s:
+            login_info = self._login()
+            if not login_info:
                 print('** Login was failed!!! :(\n')
                 return res
 
             print('Login was successful!!\n')
             # Here parameters will send to the decoratee.
             # 'args[0]' must be decoratee itself(class object).
-            res = f(*args, self.__s)
+            res = f(*args, login_info)
 
             # After operation action, auto logout.
             print('Logout your mail server...')

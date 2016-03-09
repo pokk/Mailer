@@ -23,9 +23,8 @@ class Mailer:
 
     window_context = None
 
-    def __init__(self):
-        self._file_arr = ['Detail Map.png', 'Map.png', 'Kansai Int Access.pdf', 'GARBAGE.pdf',
-                          'Home Utensils.pdf', 'Rule for email.pdf', 'Self Check.pdf']
+    def __init__(self, attachment_list=None):
+        self._file_arr = attachment_list
         self._mail = None
         self._file_path = ''
 
