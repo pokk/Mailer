@@ -1,4 +1,5 @@
 """ Created by Jieyi on 2/4/16. """
+import copy
 import threading
 import tkinter
 import tkinter.messagebox as messagebox
@@ -10,6 +11,8 @@ from tkinter.ttk import Progressbar, Combobox
 from __init__ import attachment_list, lang_list, content_link_title, content_link
 from internet import InternetStatus
 from mailer import Mailer
+
+from pymailer import atta_lang_list
 
 
 class DecoratorThreadLockerApp:
@@ -51,6 +54,9 @@ class DecoratorErrorCheckApp:
             decoratee = args[0]
             res = True
 
+            if res and decoratee.choose_attachment_lang():
+                decoratee.log_msg_text.insert(END, '\n** Please check your attachments is correct...\n\n')
+                res &= False
             # Check combobox.
             if res and decoratee.url_lang_combobox.current() is 0:
                 decoratee.log_msg_text.insert(END, '\n** Please select a language, thanks! ;)\n\n')
@@ -99,10 +105,11 @@ class AppGUI(Frame):
         self.quit_button = Button(self, text='Exit', command=self.__exit)
         self.log_msg_text = ScrolledText(self)
         # Attachment.
-        self._mail_attachment_list = attachment_list
-        self.url_lang_link_title = content_link_title
-        self.url_lang_link = content_link
-        self._mailer = Mailer(self._mail_attachment_list)
+        self._mail_attachment_list = attachment_list[:]
+        self.url_lang_link_title = content_link_title[:]
+        self.url_lang_link = copy.deepcopy(content_link)
+        # TODO: I need to find somewhere to set it.
+        self._mailer = None
 
         # Let Mailer can control components.
         Mailer.window_content = self
@@ -140,6 +147,18 @@ class AppGUI(Frame):
 
         self._mailer.content = content
         return True
+
+    def choose_attachment_lang(self):
+        self._mail_attachment_list = attachment_list[:]
+        if atta_lang_list[self.url_lang_combobox.current()]:
+            for i in range(len(self._mail_attachment_list)):
+                if i > 2:
+                    att = self._mail_attachment_list[i].split('.')
+
+                    self._mail_attachment_list[i] = ''.join([' ', atta_lang_list[self.url_lang_combobox.current()], '.']).join(att)
+            return True
+
+        return False
 
     def _send_mail(self):
         if not self.lock:
