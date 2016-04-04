@@ -8,11 +8,10 @@ from tkinter.constants import FALSE
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Progressbar, Combobox
 
-from __init__ import attachment_list, lang_list, content_link_title, content_link
+from __init__ import attachment_list, lang_list, content_link_title, content_link, atta_lang_list
 from internet import InternetStatus
+from mail_checker import CheckModifyContent, CheckInternet, CheckInputReceiver, CheckSelectLanguage, CheckChangeAttachmentLanguage
 from mailer import Mailer
-
-from pymailer import atta_lang_list
 
 
 class DecoratorThreadLockerApp:
@@ -52,27 +51,39 @@ class DecoratorErrorCheckApp:
             """
 
             decoratee = args[0]
-            res = True
+            checker = CheckModifyContent(decoratee,
+                                         CheckInternet(decoratee,
+                                                       CheckInputReceiver(decoratee,
+                                                                          CheckSelectLanguage(decoratee,
+                                                                                              CheckChangeAttachmentLanguage(decoratee)))))
+            decoratee._mailer = Mailer(decoratee.mail_attachment_list)
+            res = checker.do_something()
 
-            if res and decoratee.choose_attachment_lang():
-                decoratee.log_msg_text.insert(END, '\n** Please check your attachments is correct...\n\n')
-                res &= False
-            # Check combobox.
-            if res and decoratee.url_lang_combobox.current() is 0:
-                decoratee.log_msg_text.insert(END, '\n** Please select a language, thanks! ;)\n\n')
-                res &= False
-            # Check receiver name.
-            if res and not decoratee.is_input_receiver():
-                decoratee.log_msg_text.insert(END, "\n** Please don't forget to input receiver name. ^_^\n\n")
-                res &= False
-            # Check internet.
-            if res and not decoratee.is_internet():
-                decoratee.log_msg_text.insert(END, '\n** Please check your internet state.\n\n')
-                res &= False
-            # Check content key word.
-            if res and not decoratee.modify_content_link(decoratee.url_lang_link.get(decoratee.url_lang_combobox_str.get())):
-                decoratee.log_msg_text.insert(END, '\n** Please check your content key word.\n\n')
-                res &= False
+            print(res)
+
+            return False
+
+            # # Check the attachment language.
+            # if res and decoratee.choose_attachment_lang():
+            #     decoratee.log_msg_text.insert(END, '\n** Please check your attachments is correct...\n\n')
+            #     res &= False
+            # decoratee._mailer = Mailer(decoratee.mail_attachment_list)
+            # # Check combobox.
+            # if res and decoratee.url_lang_combobox.current() is 0:
+            #     decoratee.log_msg_text.insert(END, '\n** Please select a language, thanks! ;)\n\n')
+            #     res &= False
+            # # Check receiver name.
+            # if res and not decoratee.is_input_receiver():
+            #     decoratee.log_msg_text.insert(END, "\n** Please don't forget to input receiver name. ^_^\n\n")
+            #     res &= False
+            # # Check internet.
+            # if res and not decoratee.is_internet():
+            #     decoratee.log_msg_text.insert(END, '\n** Please check your internet state.\n\n')
+            #     res &= False
+            # # Check content key word.
+            # if res and not decoratee.modify_content_link(decoratee.url_lang_link.get(decoratee.url_lang_combobox_str.get())):
+            #     decoratee.log_msg_text.insert(END, '\n** Please check your content key word.\n\n')
+            #     res &= False
 
             decoratee.lock = res  # Unlock the thread locker.
             return func(*args) if res else res
@@ -105,10 +116,9 @@ class AppGUI(Frame):
         self.quit_button = Button(self, text='Exit', command=self.__exit)
         self.log_msg_text = ScrolledText(self)
         # Attachment.
-        self._mail_attachment_list = attachment_list[:]
+        self.mail_attachment_list = attachment_list[:]
         self.url_lang_link_title = content_link_title[:]
         self.url_lang_link = copy.deepcopy(content_link)
-        # TODO: I need to find somewhere to set it.
         self._mailer = None
 
         # Let Mailer can control components.
@@ -148,17 +158,15 @@ class AppGUI(Frame):
         self._mailer.content = content
         return True
 
-    def choose_attachment_lang(self):
-        self._mail_attachment_list = attachment_list[:]
+    def change_attachment_lang(self):
+        self.mail_attachment_list = attachment_list[:]
         if atta_lang_list[self.url_lang_combobox.current()]:
-            for i in range(len(self._mail_attachment_list)):
+            for i in range(len(self.mail_attachment_list)):
                 if i > 2:
-                    att = self._mail_attachment_list[i].split('.')
+                    att = self.mail_attachment_list[i].split('.')
+                    self.mail_attachment_list[i] = ''.join([' ', atta_lang_list[self.url_lang_combobox.current()], '.']).join(att)
 
-                    self._mail_attachment_list[i] = ''.join([' ', atta_lang_list[self.url_lang_combobox.current()], '.']).join(att)
-            return True
-
-        return False
+        return True
 
     def _send_mail(self):
         if not self.lock:
