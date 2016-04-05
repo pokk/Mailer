@@ -59,32 +59,6 @@ class DecoratorErrorCheckApp:
             decoratee._mailer = Mailer(decoratee.mail_attachment_list)
             res = checker.do_something()
 
-            print(res)
-
-            return False
-
-            # # Check the attachment language.
-            # if res and decoratee.choose_attachment_lang():
-            #     decoratee.log_msg_text.insert(END, '\n** Please check your attachments is correct...\n\n')
-            #     res &= False
-            # decoratee._mailer = Mailer(decoratee.mail_attachment_list)
-            # # Check combobox.
-            # if res and decoratee.url_lang_combobox.current() is 0:
-            #     decoratee.log_msg_text.insert(END, '\n** Please select a language, thanks! ;)\n\n')
-            #     res &= False
-            # # Check receiver name.
-            # if res and not decoratee.is_input_receiver():
-            #     decoratee.log_msg_text.insert(END, "\n** Please don't forget to input receiver name. ^_^\n\n")
-            #     res &= False
-            # # Check internet.
-            # if res and not decoratee.is_internet():
-            #     decoratee.log_msg_text.insert(END, '\n** Please check your internet state.\n\n')
-            #     res &= False
-            # # Check content key word.
-            # if res and not decoratee.modify_content_link(decoratee.url_lang_link.get(decoratee.url_lang_combobox_str.get())):
-            #     decoratee.log_msg_text.insert(END, '\n** Please check your content key word.\n\n')
-            #     res &= False
-
             decoratee.lock = res  # Unlock the thread locker.
             return func(*args) if res else res
 

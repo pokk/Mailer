@@ -2,13 +2,13 @@
 
 __all__ = ['authority', 'autoMailer', 'internet', 'io_operation', 'mail', 'mailer']
 
-debug_log = True
+debug_log = False
 
 # Country language.
 lang_list = ['Select a language', 'English', 'Tradition Chinese', 'Simple Chinese', 'Korea']
 atta_lang_list = [None, '', 'chinese', 'chinese', '']
 # Attachments name list.
-attachment_list = ['Detail Map.png', 'Map.png', 'Kansai Int Access.pdf', 'GARBAGE.pdf',
+attachment_list = ['Detail Map.png', 'Map.png', 'From the Kansai Int.pdf', 'GARBAGE.pdf',
                    'Home Utensils.pdf', 'Rule for email.pdf', 'Self Check.pdf']
 # The links which will be changed in the content.
 content_link_title = ['< Japan Guide >', '< Weather Forecast in Osaka >',
