@@ -88,7 +88,7 @@ class Mail:
         for path in self.__attachment:
             try:
                 # Get the file name from file path.
-                self.__filename = path.split('/')[-1]
+                self.__filename = path.split('\\')[-1]
 
                 # Attach the file to mail information.
                 att = MIMEText(open(path, 'rb').read(), 'base64', 'gb2312')

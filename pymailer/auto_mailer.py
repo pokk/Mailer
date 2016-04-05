@@ -8,8 +8,7 @@ from tkinter.constants import FALSE
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Progressbar, Combobox
 
-from __init__ import attachment_list, lang_list, content_link_title, content_link, atta_lang_list
-from internet import InternetStatus
+from __init__ import attachment_list, lang_list, content_link_title, content_link
 from mail_checker import CheckModifyContent, CheckInternet, CheckInputReceiver, CheckSelectLanguage, CheckChangeAttachmentLanguage
 from mailer import Mailer
 
@@ -51,12 +50,13 @@ class DecoratorErrorCheckApp:
             """
 
             decoratee = args[0]
-            checker = CheckModifyContent(decoratee,
-                                         CheckInternet(decoratee,
-                                                       CheckInputReceiver(decoratee,
-                                                                          CheckSelectLanguage(decoratee,
-                                                                                              CheckChangeAttachmentLanguage(decoratee)))))
-            decoratee._mailer = Mailer(decoratee.mail_attachment_list)
+            # Error checker.
+            checker = CheckChangeAttachmentLanguage(
+                decoratee, CheckSelectLanguage(
+                    decoratee, CheckInputReceiver(
+                        decoratee, CheckInternet(
+                            decoratee, CheckModifyContent(decoratee)))))
+            # Checking all of the error check.
             res = checker.do_something()
 
             decoratee.lock = res  # Unlock the thread locker.
@@ -99,48 +99,6 @@ class AppGUI(Frame):
         Mailer.window_content = self
 
         self.__create_widgets()
-
-    def is_internet(self):
-        """
-        Checking the internet state.
-
-        :return: True: internet is available, False: internet is unavailable.
-        """
-
-        self.log_msg_text.insert(END, 'Checking the internet...\n')
-        # Check the internet is available or not.
-        if not InternetStatus().is_internet_connect():
-            # If the internet is not connected, we will quit the process.
-            self.log_msg_text.insert(END, 'No internet connect!!\n')
-            return False
-        self.log_msg_text.insert(END, 'Internet is ok!\n\n')
-        return True
-
-    def is_input_receiver(self):
-        return not not self.receiver_name_field.get()
-
-    def modify_content_link(self, link_arr):
-        content = self._mailer.content
-        for index in range(len(link_arr)):
-            try:
-                content_index = content.index(self.url_lang_link_title[index]) + len(self.url_lang_link_title[index])
-                content = content[:content_index] + '\n' + link_arr[index] + content[content_index:]
-            except ValueError as ve:
-                self.log_msg_text.insert(END, self.url_lang_link_title[index] + ' ' + str(ve) + '\n')
-                return False
-
-        self._mailer.content = content
-        return True
-
-    def change_attachment_lang(self):
-        self.mail_attachment_list = attachment_list[:]
-        if atta_lang_list[self.url_lang_combobox.current()]:
-            for i in range(len(self.mail_attachment_list)):
-                if i > 2:
-                    att = self.mail_attachment_list[i].split('.')
-                    self.mail_attachment_list[i] = ''.join([' ', atta_lang_list[self.url_lang_combobox.current()], '.']).join(att)
-
-        return True
 
     def _send_mail(self):
         if not self.lock:
