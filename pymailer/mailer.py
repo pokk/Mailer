@@ -59,11 +59,6 @@ class Mailer:
         return True
 
     def _making_mail(self):
-        """
-        Making an email format.
-
-        :return: A mail format.
-        """
 
         Mailer.window_content.log_msg_text.insert(END, 'Creating the mail format...\n')
 
