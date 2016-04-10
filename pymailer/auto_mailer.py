@@ -8,8 +8,8 @@ from tkinter.constants import FALSE
 from tkinter.scrolledtext import ScrolledText
 from tkinter.ttk import Progressbar, Combobox
 
-from __init__ import attachment_list, lang_list, content_link_title, content_link
-from mail_checker import CheckModifyContent, CheckInternet, CheckInputReceiver, CheckSelectLanguage, CheckChangeAttachmentLanguage
+from __init__ import debug_log, attachment_list, lang_list, content_link_title, content_link, atta_lang_list
+from mail_checker import CheckModifyContentTitle, CheckInternet, CheckInputReceiver, CheckSelectLanguage
 from mailer import Mailer
 
 
@@ -38,7 +38,7 @@ class DecoratorThreadLockerApp:
         return wrapper
 
 
-class DecoratorErrorCheckApp:
+class DecoratorErrorCheckAndInitApp:
     """
     Decorator to application for error checking.
     """
@@ -50,16 +50,34 @@ class DecoratorErrorCheckApp:
             """
 
             decoratee = args[0]
-            # Error checker.
-            checker = CheckChangeAttachmentLanguage(
-                decoratee, CheckSelectLanguage(
-                    decoratee, CheckInputReceiver(
-                        decoratee, CheckInternet(
-                            decoratee, CheckModifyContent(decoratee)))))
-            # Checking all of the error check.
-            res = checker.do_something()
+            decoratee.log_msg_text.insert(END, 'We start to check your input format...\n\n')
 
+            # Error checker.
+            checker = CheckInternet(
+                None, CheckSelectLanguage(
+                    decoratee.url_lang_combobox.current(), CheckInputReceiver(
+                        decoratee.receiver_name_field.get())))
+
+            # Checking all of the error check.
+            res, msg = checker.do_something()
+
+            # Pass the 1st checking step.
+            if res:
+                # Create a Mailer object.
+                decoratee._mailer = decoratee._make_mailer()
+                # For English content. The 2nd step, checking English content's url title.
+                if decoratee.url_lang_combobox.get() != lang_list[2] and decoratee.url_lang_combobox.get() != lang_list[3]:
+                    res, msg = CheckModifyContentTitle([decoratee._mailer.content, decoratee.url_lang_link_title]).do_something()
+
+                    # Pass the 2nd checking step.
+                    if res:
+                        # Change to the language we selected url link.
+                        decoratee._modify_content_url_link()
+
+            # The checking is fail.
+            decoratee.log_msg_text.insert(END, msg)  # Show the error msg.
             decoratee.lock = res  # Unlock the thread locker.
+
             return func(*args) if res else res
 
         return wrapper
@@ -93,6 +111,7 @@ class AppGUI(Frame):
         self.mail_attachment_list = attachment_list[:]
         self.url_lang_link_title = content_link_title[:]
         self.url_lang_link = copy.deepcopy(content_link)
+        # Mailer
         self._mailer = None
 
         # Let Mailer can control components.
@@ -109,6 +128,35 @@ class AppGUI(Frame):
     def _choose(self, event):
         # arr = self.url_lang_link.get(self.url_lang_combobox_str.get())  # Get the array by choosing language.
         pass
+
+    def _modify_content_url_link(self):
+        link_arr = self.url_lang_link.get(self.url_lang_combobox_str.get())
+        content = self._mailer.content
+        for index in range(len(link_arr)):
+            content_index = content.index(self.url_lang_link_title[index]) + len(self.url_lang_link_title[index])
+            content = content[:content_index] + '\n' + link_arr[index] + content[content_index:]
+
+        self._mailer.content = content
+        return False
+
+    def _make_mailer(self):
+        self.mail_attachment_list = attachment_list[:]  # Clone a list.
+        if atta_lang_list[self.url_lang_combobox.current()]:
+            for i in range(len(self.mail_attachment_list)):
+                # Only from the third file to the end file can change language.
+                if i > 2:
+                    # Modify the file name.
+                    att = self.mail_attachment_list[i].split('.')
+                    self.mail_attachment_list[i] = ''.join([' ', atta_lang_list[self.url_lang_combobox.current()], '.']).join(att)
+
+        path = 'content.docx'
+        if self.url_lang_combobox.get() == lang_list[2] or self.url_lang_combobox.get() == lang_list[3]:
+            path = 'content chinese.docx'
+        if debug_log:
+            print(self.mail_attachment_list)
+
+        # ** IMPORTANT, we have to new an object here. Otherwise, we couldn't check the error checking.
+        return Mailer(content_path=path, attachment_list=self.mail_attachment_list)
 
     def __create_widgets(self):
         """
@@ -141,7 +189,7 @@ class AppGUI(Frame):
             messagebox.showinfo('Error', "Now it's processing...please wait it ;)")
 
     @DecoratorThreadLockerApp()
-    @DecoratorErrorCheckApp()
+    @DecoratorErrorCheckAndInitApp()
     def __send_mail(self):
         self.send_progressbar.start()  # Start processing the progress.
         ending = 'Welcome to use my application :)' if self._mailer.send_mail() \

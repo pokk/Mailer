@@ -3,6 +3,7 @@ import json
 from pprint import pprint
 
 from __init__ import debug_log
+from docx import Document
 
 
 class FileCategoryFactory:
@@ -71,12 +72,22 @@ class FileOperator:
 
         return content
 
+    def open_docx_file(self, opend_file):
+        if debug_log:
+            print(opend_file)
+
+        document = Document(opend_file)
+        content = '\n'.join(line.text for line in document.paragraphs)
+
+        return content
+
 
 # Testing code.
 def main():
-    d = FileOperator().open_json_file('user.json')
-    print('%s\n%s' % (d['uid'], d['pwd']))
-
+    # d = FileOperator().open_json_file('user.json')
+    # print('%s\n%s' % (d['uid'], d['pwd']))
+    d = FileOperator().open_docx_file('../content chinese.docx')
+    print(d)
 
 if __name__ == '__main__':
     main()

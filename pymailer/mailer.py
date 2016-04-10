@@ -20,13 +20,14 @@ class Mailer:
 
     window_content = None
 
-    def __init__(self, attachment_list=None):
+    def __init__(self, content_path=None, attachment_list=None):
         self._file_arr = attachment_list
         self._mail = None
         self._file_path = ''
         # Get receiver's information from local json file.
         # ** The path we should use 'content.txt'. **
-        self._content = FileOperator().open_txt_file(os.path.abspath(os.pardir) + '/content.txt')
+        # self._content = FileOperator().open_docx_file(os.path.abspath(os.pardir) + '/content.docx')
+        self._content = FileOperator().open_docx_file(os.path.abspath(os.pardir) + '/' + content_path)
 
     # Send a mail to someone through which mail service.
     @Authority(user['uid'], user['pwd'], user['server'])
@@ -59,11 +60,6 @@ class Mailer:
         return True
 
     def _making_mail(self):
-        """
-        Making an email format.
-
-        :return: A mail format.
-        """
 
         Mailer.window_content.log_msg_text.insert(END, 'Creating the mail format...\n')
 
