@@ -68,8 +68,7 @@ class DecoratorErrorCheckAndInitApp:
                 # Choose correct list url title.
                 decoratee.url_lang_link_title = content_link_title[decoratee.url_lang_combobox.get()]
 
-                # For English content. The 2nd step, checking English content's url title.
-                # if decoratee.url_lang_combobox.get() != lang_list[2] and decoratee.url_lang_combobox.get() != lang_list[3]:
+                # The 2nd step, checking content's url title.
                 res, msg = CheckModifyContentTitle([decoratee._mailer.content, decoratee.url_lang_link_title]).do_something()
 
                 # Pass the 2nd checking step.
@@ -152,6 +151,7 @@ class AppGUI(Frame):
                     att = self.mail_attachment_list[i].split('.')
                     self.mail_attachment_list[i] = ''.join([' ', atta_lang_list[self.url_lang_combobox.current()], '.']).join(att)
 
+        # ** IMPORTANT, we set the content path here!!
         path = 'content.docx'
         if self.url_lang_combobox.get() == lang_list[2] or self.url_lang_combobox.get() == lang_list[3]:
             path = 'content chinese.docx'

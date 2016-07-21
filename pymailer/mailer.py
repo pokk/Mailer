@@ -25,8 +25,6 @@ class Mailer:
         self._mail = None
         self._file_path = ''
         # Get receiver's information from local json file.
-        # ** The path we should use 'content.txt'. **
-        # self._content = FileOperator().open_docx_file(os.path.abspath(os.pardir) + '/content.docx')
         self._content = FileOperator().open_docx_file(os.path.abspath(os.pardir) + '/' + content_path)
 
     # Send a mail to someone through which mail service.

@@ -3,7 +3,7 @@ import json
 from pprint import pprint
 
 from __init__ import debug_log
-from docx import Document
+from docx import Document  # install 'python-docx' library.
 
 
 class FileCategoryFactory:
