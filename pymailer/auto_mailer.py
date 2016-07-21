@@ -65,14 +65,17 @@ class DecoratorErrorCheckAndInitApp:
             if res:
                 # Create a Mailer object.
                 decoratee._mailer = decoratee._make_mailer()
-                # For English content. The 2nd step, checking English content's url title.
-                if decoratee.url_lang_combobox.get() != lang_list[2] and decoratee.url_lang_combobox.get() != lang_list[3]:
-                    res, msg = CheckModifyContentTitle([decoratee._mailer.content, decoratee.url_lang_link_title]).do_something()
+                # Choose correct list url title.
+                decoratee.url_lang_link_title = content_link_title[decoratee.url_lang_combobox.get()]
 
-                    # Pass the 2nd checking step.
-                    if res:
-                        # Change to the language we selected url link.
-                        decoratee._modify_content_url_link()
+                # For English content. The 2nd step, checking English content's url title.
+                # if decoratee.url_lang_combobox.get() != lang_list[2] and decoratee.url_lang_combobox.get() != lang_list[3]:
+                res, msg = CheckModifyContentTitle([decoratee._mailer.content, decoratee.url_lang_link_title]).do_something()
+
+                # Pass the 2nd checking step.
+                if res:
+                    # Change to the language we selected url link.
+                    decoratee._modify_content_url_link()
 
             # The checking is fail.
             decoratee.log_msg_text.insert(END, msg)  # Show the error msg.
@@ -109,7 +112,7 @@ class AppGUI(Frame):
         self.log_msg_text = ScrolledText(self)
         # Attachment.
         self.mail_attachment_list = attachment_list[:]
-        self.url_lang_link_title = content_link_title[:]
+        self.url_lang_link_title = None
         self.url_lang_link = copy.deepcopy(content_link)
         # Mailer
         self._mailer = None

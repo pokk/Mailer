@@ -89,7 +89,7 @@ class Mailer:
         # Go to parent's folder path.
         dir_path = self._file_path[0:dir_path.rfind('/')]
         # Change path to mail folder.
-        dir_path = '/'.join((dir_path, 'For mail'))
+        dir_path = '/../'.join((dir_path, 'For mail'))
 
         return dir_path
 

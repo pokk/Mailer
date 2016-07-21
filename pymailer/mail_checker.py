@@ -15,7 +15,7 @@ class Checker(metaclass=ABCMeta):
             msg = self._error_action()
             return False, msg
         else:
-            return self.__next_checker.do_something() if self.__next_checker else (True, 'Perfect!! passing all of checking.')
+            return self.__next_checker.do_something() if self.__next_checker else (True, 'Perfect!! passing all of checking.\n\n')
 
     def set_checker(self, checker):
         self.__next_checker = checker
